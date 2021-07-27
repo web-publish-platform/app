@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gray-app
+spec:
+  selector:
+    matchLabels:
+      app: gray-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gray-app
+    spec:
+      imagePullSecrets:
+        - name: registry-key
+      containers:
+        - name: gray-app
+          image: djlxs/gray-app:v1
+          ports:
+            - containerPort: 80
