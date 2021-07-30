@@ -31,15 +31,21 @@ pipeline {
                 script{
                     sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/app-deployment.yaml"
                     sh "sed -i '' 's/<IMAGE_NAME>/${params.imageName}/' deploy/k8s/app-deployment.yaml"
+                    sh "sed -i '' 's/<CANARY>/${params.canary}/' deploy/k8s/app-ingress.yaml"
+                    sh "sed -i '' 's/<CANARY>/${params.canaryHeader}/' deploy/k8s/app-ingress.yaml"
+                    sh "sed -i '' 's/<CANARY>/${params.canaryHeaderValue}/' deploy/k8s/app-ingress.yaml"
                 }
             }
         }
         stage('Deploy:k8s') {
             steps {
                 script{
+                    echo "-------deployment--------"
                     sh "cat deploy/k8s/app-deployment.yaml"
                     sh "kubectl apply -f deploy/k8s/app-deployment.yaml"
                     sh "kubectl apply -f deploy/k8s/app-service.yaml"
+                    echo "-------ingress--------"
+                    sh "cat deploy/k8s/app-ingress.yaml"
                     sh "kubectl apply -f deploy/k8s/app-ingress.yaml"
                 }
             }
