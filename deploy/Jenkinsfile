@@ -13,7 +13,7 @@ pipeline {
         stage('Build') {
             steps {
                 script{
-                    sh "docker build --rm -t ${params.imageName}:${params.version}  -f deploy/Dockerfile ."
+                    sh "docker build --rm -t ${params.name}:${params.version}  -f deploy/Dockerfile ."
                 }
             }
         }
@@ -21,8 +21,8 @@ pipeline {
             steps {
                 script{
                     sh "docker login -u djlxs -p djl.l951753" 
-                    sh "docker tag ${params.imageName}:${params.version} djlxs/${params.imageName}:${params.version}" 
-                    sh "docker push djlxs/${params.imageName}:${params.version}"
+                    sh "docker tag ${params.name}:${params.version} djlxs/${params.name}:${params.version}" 
+                    sh "docker push djlxs/${params.name}:${params.version}"
                 }
             }
         }
@@ -30,10 +30,17 @@ pipeline {
             steps {
                 script{
                     sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/app-deployment.yaml"
-                    sh "sed -i '' 's/<IMAGE_NAME>/${params.imageName}/' deploy/k8s/app-deployment.yaml"
+                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/app-deployment.yaml"
+                    
+                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/app-service.yaml"
+                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/app-service.yaml"
+
+                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/app-ingress.yaml"
+                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/app-ingress.yaml"
                     sh "sed -i '' 's/<CANARY>/${params.canary}/' deploy/k8s/app-ingress.yaml"
-                    sh "sed -i '' 's/<CANARY>/${params.canaryHeader}/' deploy/k8s/app-ingress.yaml"
-                    sh "sed -i '' 's/<CANARY>/${params.canaryHeaderValue}/' deploy/k8s/app-ingress.yaml"
+                    sh "sed -i '' 's/<CANARY_COOKIE>/${params.canaryCookie}/' deploy/k8s/app-ingress.yaml"
+                    sh "sed -i '' 's/<CANARY_HEADER>/${params.canaryHeader}/' deploy/k8s/app-ingress.yaml"
+                    sh "sed -i '' 's/<CANARY_HEADER_VALUE>/${params.canaryHeaderValue}/' deploy/k8s/app-ingress.yaml"
                 }
             }
         }
@@ -43,6 +50,7 @@ pipeline {
                     echo "-------deployment--------"
                     sh "cat deploy/k8s/app-deployment.yaml"
                     sh "kubectl apply -f deploy/k8s/app-deployment.yaml"
+                     echo "-------service--------"
                     sh "kubectl apply -f deploy/k8s/app-service.yaml"
                     echo "-------ingress--------"
                     sh "cat deploy/k8s/app-ingress.yaml"

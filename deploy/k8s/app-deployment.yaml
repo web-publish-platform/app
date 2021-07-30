@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: product-app
+  name: <NAME>-<VERSION>
 spec:
   selector:
     matchLabels:
-      app: product-app
+      app: <NAME>-<VERSION>
   replicas: 1
   template:
     metadata:
       labels:
-        app: product-app
+        app: <NAME>-<VERSION>
     spec:
       imagePullSecrets:
         - name: product-key
       containers:
-        - name: product-app
-          image: djlxs/<IMAGE_NAME>:<VERSION>
+        - name: <NAME>-<VERSION>
+          image: djlxs/<NAME>:<VERSION>
           ports:
             - containerPort: 80
