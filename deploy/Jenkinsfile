@@ -29,18 +29,18 @@ pipeline {
         stage('YAML') {
             steps {
                 script{
-                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/app-deployment.yaml"
-                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/app-deployment.yaml"
+                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/deployment.yaml"
+                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/deployment.yaml"
                     
-                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/app-service.yaml"
-                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/app-service.yaml"
+                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/service.yaml"
+                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/service.yaml"
 
-                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/app-ingress.yaml"
-                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/app-ingress.yaml"
-                    sh "sed -i '' 's/<CANARY>/${params.canary}/' deploy/k8s/app-ingress.yaml"
-                    sh "sed -i '' 's/<CANARY_COOKIE>/${params.canaryCookie}/' deploy/k8s/app-ingress.yaml"
-                    sh "sed -i '' 's/<CANARY_HEADER>/${params.canaryHeader}/' deploy/k8s/app-ingress.yaml"
-                    sh "sed -i '' 's/<CANARY_HEADER_VALUE>/${params.canaryHeaderValue}/' deploy/k8s/app-ingress.yaml"
+                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/ingress.yaml"
+                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/ingress.yaml"
+                    sh "sed -i '' 's/<CANARY>/${params.canary}/' deploy/k8s/ingress.yaml"
+                    sh "sed -i '' 's/<CANARY_COOKIE>/${params.canaryCookie}/' deploy/k8s/ingress.yaml"
+                    sh "sed -i '' 's/<CANARY_HEADER>/${params.canaryHeader}/' deploy/k8s/ingress.yaml"
+                    sh "sed -i '' 's/<CANARY_HEADER_VALUE>/${params.canaryHeaderValue}/' deploy/k8s/ingress.yaml"
                 }
             }
         }
@@ -48,13 +48,14 @@ pipeline {
             steps {
                 script{
                     echo "-------deployment--------"
-                    sh "cat deploy/k8s/app-deployment.yaml"
-                    sh "kubectl apply -f deploy/k8s/app-deployment.yaml"
-                     echo "-------service--------"
-                    sh "kubectl apply -f deploy/k8s/app-service.yaml"
+                    sh "cat deploy/k8s/deployment.yaml"
+                    sh "kubectl apply -f deploy/k8s/deployment.yaml"
+                    echo "-------service--------"
+                    sh "cat deploy/k8s/service.yaml"
+                    sh "kubectl apply -f deploy/k8s/service.yaml"
                     echo "-------ingress--------"
-                    sh "cat deploy/k8s/app-ingress.yaml"
-                    sh "kubectl apply -f deploy/k8s/app-ingress.yaml"
+                    sh "cat deploy/k8s/ingress.yaml"
+                    sh "kubectl apply -f deploy/k8s/ingress.yaml"
                 }
             }
         }

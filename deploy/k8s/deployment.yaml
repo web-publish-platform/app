@@ -13,7 +13,7 @@ spec:
         app: <NAME>-<VERSION>
     spec:
       imagePullSecrets:
-        - name: product-key
+        - name: registry-key
       containers:
         - name: <NAME>-<VERSION>
           image: djlxs/<NAME>:<VERSION>

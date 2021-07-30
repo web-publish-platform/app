@@ -8,7 +8,7 @@ metadata:
     nginx.ingress.kubernetes.io/canary-by-cookie: "<CANARY_COOKIE>"
 spec:
   rules:
-    - host: app-ingress.info
+    - host: app2-ingress.info
       http:
         paths:
         - backend:
