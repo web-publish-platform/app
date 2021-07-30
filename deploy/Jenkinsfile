@@ -17,12 +17,27 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
+        stage('Deploy:Docker') {
             steps {
                 script{
                     sh "docker login -u djlxs -p djl.l951753" 
                     sh "docker tag ${params.imageName}:${params.version} djlxs/${params.imageName}:${params.version}" 
                     sh "docker push djlxs/${params.imageName}:${params.version}"
+                }
+            }
+        }
+        stage('YAML') {
+            steps {
+                script{
+                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/app-deployment.yaml"
+                    sh "sed -i '' 's/<IMAGE_NAME>/${params.imageName}/' deploy/k8s/app-deployment.yaml"
+                }
+            }
+        }
+        stage('Deploy:k8s') {
+            steps {
+                script{
+                    sh "cat deploy/k8s/app-deployment.yaml"
                     sh "kubectl apply -f deploy/k8s/app-deployment.yaml"
                     sh "kubectl apply -f deploy/k8s/app-service.yaml"
                     sh "kubectl apply -f deploy/k8s/app-ingress.yaml"

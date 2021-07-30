@@ -16,6 +16,6 @@ spec:
         - name: product-key
       containers:
         - name: product-app
-          image: djlxs/gray-app:v2
+          image: djlxs/<IMAGE_NAME>:<VERSION>
           ports:
             - containerPort: 80
