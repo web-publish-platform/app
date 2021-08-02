@@ -10,52 +10,10 @@ pipeline {
                 }
             }
         }
-        stage('Build') {
+        stage('Test') {
             steps {
                 script{
-                    sh "docker build --rm -t ${params.name}:${params.version}  -f deploy/Dockerfile ."
-                }
-            }
-        }
-        stage('Deploy:Docker') {
-            steps {
-                script{
-                    sh "docker login -u djlxs -p djl.l951753" 
-                    sh "docker tag ${params.name}:${params.version} djlxs/${params.name}:${params.version}" 
-                    sh "docker push djlxs/${params.name}:${params.version}"
-                }
-            }
-        }
-        stage('YAML') {
-            steps {
-                script{
-                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/deployment.yaml"
-                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/deployment.yaml"
-                    
-                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/service.yaml"
-                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/service.yaml"
-
-                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/ingress.yaml"
-                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/ingress.yaml"
-                    sh "sed -i '' 's/<CANARY>/${params.canary}/' deploy/k8s/ingress.yaml"
-                    sh "sed -i '' 's/<CANARY_COOKIE>/${params.canaryCookie}/' deploy/k8s/ingress.yaml"
-                    sh "sed -i '' 's/<CANARY_HEADER>/${params.canaryHeader}/' deploy/k8s/ingress.yaml"
-                    sh "sed -i '' 's/<CANARY_HEADER_VALUE>/${params.canaryHeaderValue}/' deploy/k8s/ingress.yaml"
-                }
-            }
-        }
-        stage('Deploy:k8s') {
-            steps {
-                script{
-                    echo "-------deployment--------"
-                    sh "cat deploy/k8s/deployment.yaml"
-                    sh "kubectl apply -f deploy/k8s/deployment.yaml"
-                    echo "-------service--------"
-                    sh "cat deploy/k8s/service.yaml"
-                    sh "kubectl apply -f deploy/k8s/service.yaml"
-                    echo "-------ingress--------"
-                    sh "cat deploy/k8s/ingress.yaml"
-                    sh "kubectl apply -f deploy/k8s/ingress.yaml"
+                    echo 'just a test'
                 }
             }
         }
