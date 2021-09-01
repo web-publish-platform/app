@@ -39,8 +39,8 @@ pipeline {
                     sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/ingress.yaml"
                     sh "sed -i '' 's/<CANARY>/${params.canary}/' deploy/k8s/ingress.yaml"
                     sh "sed -i '' 's/<CANARY_COOKIE>/${params.canaryCookie}/' deploy/k8s/ingress.yaml"
-                    sh "sed -i '' 's/<CANARY_HEADER>/${params.canaryHeader}/' deploy/k8s/ingress.yaml"
-                    sh "sed -i '' 's/<CANARY_HEADER_VALUE>/${params.canaryHeaderValue}/' deploy/k8s/ingress.yaml"
+                    // sh "sed -i '' 's/<CANARY_HEADER>/${params.canaryHeader}/' deploy/k8s/ingress.yaml"
+                    // sh "sed -i '' 's/<CANARY_HEADER_VALUE>/${params.canaryHeaderValue}/' deploy/k8s/ingress.yaml"
                 }
             }
         }
