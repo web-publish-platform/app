@@ -11,7 +11,8 @@ RUN npm install && \
 
 RUN rm -rf node_modules/
 
-FROM nginx
+# 使用openresty代替nginx
+FROM openresty/openresty:alpine
 COPY --from=builder /app/deploy/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/build /usr/share/nginx/html
 EXPOSE 80
