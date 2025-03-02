@@ -1,21 +1,21 @@
+# 需要配合gray.config.txt共同作用
+
 apiVersion: networking.k8s.io/v1 # 指定资源版本为 networking.k8s.io/v1（Kubernetes 的标准 Ingress 版本）
 kind: Ingress # 声明资源类型为 Ingress
 metadata:
-  name: <NAME>-<VERSION> # 定义 Ingress 的名称
-  labels:
-    app: <NAME>-<VERSION> # 应用标签 方便查找匹配所有为该标签名的资源
+  name: <NAME>.routing.ingress # 定义 Ingress 的名称
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: / # 这是 Nginx Ingress 控制器 的自定义注解，用于路径重写 (访问 hello-world.info/api/v1/users 时，实际会转发到 web:8080/api/v1/users)
 spec:
   ingressClassName: nginx # 指定 Ingress 控制器的名称
   rules:
-    - host: <NAME>-<VERSION> # 定义 Ingress 的规则，指定要监听的域名
+    - host: djl.pub # 定义 Ingress 的规则，指定要监听的域名
       http:
         paths:
-          - path: / # 路径
+          - path: / #路径
             pathType: Prefix
             backend:
               service:
-                name: <NAME>-<VERSION> # 对应 Service的名称
+                name: <NAME>-default # 对应 正常版本 Service的name
                 port:
                   number: 80 # 对应 Service的port端口

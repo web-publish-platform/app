@@ -1,12 +1,14 @@
-apiVersion: v1
+apiVersion: v1 # 这是 Kubernetes API 的第一个稳定版本，包含许多核心对象，如 Pod、Service 等。如果你使用的是核心资源类型（如 Pod、Service），通常应该使用 v1
 kind: Service
 metadata:
-  name: <NAME>-<VERSION>
+  name: <NAME>-<VERSION> # 资源的名称 在同一个命名空间中，Service 的名称必须是唯一的。
+  labels:
+    app: <NAME>-<VERSION> # 应用标签 方便查找匹配所有为该标签名的资源
 spec:
   selector:
-    app: <NAME>-<VERSION>
+    app: <NAME>-<VERSION> # 选择器，用于选择要管理的 Pod。
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 80
-  type: NodePort
+    - protocol: TCP
+      port: 80 # 指定 Service 监听的端口是 80。是k8s集群内部访问service的端口，即通过clusterIP: port可以访问到某个service
+      targetPort: 80 # 指定容器监听的端口是 80。是容器内部监听的端口，即通过podIP: targetPort可以访问到某个容器 (例如Nginx监听的是80端口)
+  type: NodePort # 指定 Service 的类型为 NodePort，这意味着 Service 将通过节点的端口暴露给外部。允许外部客户端通过 <NodeIP>:30080 访问 Nginx 服务。

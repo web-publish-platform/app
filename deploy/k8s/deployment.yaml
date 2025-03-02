@@ -1,21 +1,23 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: apps/v1 # 指定 Kubernetes API 的版本 apps/v1 是 Kubernetes 的一个稳定版本，用于管理 Deployment、DaemonSet 和 StatefulSet 等资源。
+kind: Deployment # 指定资源的类型。Deployment 是 Kubernetes 中用于管理无状态应用程序的资源。
 metadata:
-  name: <NAME>-<VERSION>
+  name: <NAME>-<VERSION> # 资源的名称，在同一个命名空间中，资源名称必须是唯一的。
+  labels:
+    app: <NAME>-<VERSION> # 应用标签 方便查找匹配所有为该标签名的资源
 spec:
   selector:
     matchLabels:
-      app: <NAME>-<VERSION>
-  replicas: 1
+      app: <NAME>-<VERSION> # 选择器，用于选择要管理的 Pod。
+  replicas: 1 # 指定要创建的 Pod 副本数量。
   template:
     metadata:
       labels:
-        app: <NAME>-<VERSION>
+        app: <NAME>-<VERSION> # 定义Pod标签 与选择器的标签匹配
     spec:
       imagePullSecrets:
-        - name: registry-key
+        - name: registry-key # 定义镜像仓库的 secret 名称
       containers:
-        - name: <NAME>-<VERSION>
-          image: djlxs/<NAME>:<VERSION>
+        - name: <NAME>-<VERSION> # 容器的名称
+          image: <NAME>-<VERSION> # 容器使用的镜像
           ports:
-            - containerPort: 80
+            - containerPort: 80 # 表示容器监听的端口是 80，这是 Nginx 的默认 HTTP 端口。
