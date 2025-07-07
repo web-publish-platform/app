@@ -64,12 +64,15 @@ pipeline {
         stage('Generate:gray config') {
             steps {
                 script{
+                    // 读取配置文件内容到 Groovy 变量
+                    def configContent = readFile('gray.config.txt').trim()
+
                     echo "-------exec grayConfigGenerator.js--------"
                     sh "node grayConfigGenerator.js"
                     echo "------- add gray config info--------"
-                    sh "kubectl annotate ingress ${params.name}.routing.ingress \                                            
-                        nginx.ingress.kubernetes.io/configuration-snippet="$(cat gray.config.txt)" \
-                        --overwrite"
+                    sh "kubectl annotate ingress ${params.name}.routing.ingress \
+                          nginx.ingress.kubernetes.io/configuration-snippet='${configContent}' \
+                          --overwrite"
                 }
             }
         }
