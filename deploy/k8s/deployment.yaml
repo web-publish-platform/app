@@ -15,9 +15,10 @@ spec:
         app: <NAME>-<VERSION> # 定义Pod标签 与选择器的标签匹配
     spec:
       imagePullSecrets:
-        - name: registry-key # 定义镜像仓库的 secret 名称
+        - name: my-private-docker-registry-secret # 定义镜像仓库的 secret 名称
       containers:
         - name: <NAME>-<VERSION> # 容器的名称
-          image: <NAME>-<VERSION> # 容器使用的镜像
+          image: host.minikube.internal:5001/<NAME>:<VERSION> # 容器使用的镜像
+          imagePullPolicy: IfNotPresent  # 仅当本地不存在镜像时才拉取
           ports:
             - containerPort: 80 # 表示容器监听的端口是 80，这是 Nginx 的默认 HTTP 端口。

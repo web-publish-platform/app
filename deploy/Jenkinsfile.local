@@ -1,0 +1,93 @@
+
+pipeline {
+    agent any
+    environment {
+        DOCKER_REGISTRY = 'localhost:5001'  // 本地仓库地址
+    }
+    stages {
+        stage('Docker:Init') {
+            steps {
+                script{
+                    // 从全局工具配置获取 Docker 路径，并拼接到 PATH
+                    def dockerPath = tool 'docker'
+                    // 仅在 withEnv 块内生效，不影响全局
+                    withEnv(["PATH=${dockerPath}/bin:${env.PATH}"]) {
+                        sh 'docker --version'
+                    }
+                }
+            }
+        }
+        stage('Docker:Build') {
+            steps {
+                script{
+                    sh "docker build --rm -t ${params.name}:${params.version}  -f deploy/Dockerfile ."
+                    echo "docker build success"
+                }
+            }
+        }
+        stage('Docker:Tag') {
+            steps {
+                script{
+                    sh "docker tag ${params.name}:${params.version} $DOCKER_REGISTRY/${params.name}:${params.version}" 
+                }
+            }
+        }
+        // 本地Docker镜像仓库
+        stage('Docker:Push') {
+            steps {
+                script{
+                    sh "docker login -u djlxs -p 123456 $DOCKER_REGISTRY" 
+                    sh "docker push $DOCKER_REGISTRY/${params.name}:${params.version}"
+                }
+            }
+        }
+        stage('YAML') {
+            steps {
+                script{
+                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/deployment.yaml"
+                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/deployment.yaml"
+                    
+                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/service.yaml"
+                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/service.yaml"
+
+                    sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/ingress.yaml"
+                    sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/ingress.yaml"
+
+                    // sh "sed -i '' 's/<VERSION>/${params.name}/' deploy/k8s/router.ingress.yaml"
+                }
+            }
+        }
+        stage('Deploy:k8s') {
+            steps {
+                script{
+                    echo "-------deployment--------"
+                    sh "cat deploy/k8s/deployment.yaml"
+                    sh "kubectl apply -f deploy/k8s/deployment.yaml"
+                    echo "-------service--------"
+                    sh "cat deploy/k8s/service.yaml"
+                    sh "kubectl apply -f deploy/k8s/service.yaml"
+                    echo "-------ingress--------"
+                    sh "cat deploy/k8s/ingress.yaml"
+                    sh "kubectl apply -f deploy/k8s/ingress.yaml"
+                    // echo "-------router ingress--------"
+                    // sh "kubectl apply -f deploy/k8s/router.ingress.yaml"
+                }
+            }
+        }
+        // stage('Generate:gray config') {
+        //     steps {
+        //         script{
+        //             // 读取配置文件内容到 Groovy 变量
+        //             def configContent = readFile('gray.config.txt').trim()
+
+        //             echo "-------exec grayConfigGenerator.js--------"
+        //             sh "node grayConfigGenerator.js"
+        //             echo "------- add gray config info--------"
+        //             sh "kubectl annotate ingress ${params.name}.routing.ingress \
+        //                   nginx.ingress.kubernetes.io/configuration-snippet='${configContent}' \
+        //                   --overwrite"
+        //         }
+        //     }
+        // }
+    }
+}

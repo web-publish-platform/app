@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: nginx # 指定 Ingress 控制器的名称
   rules:
-    - host: <NAME>-<VERSION> # 定义 Ingress 的规则，指定要监听的域名
+    - host: <NAME>-<VERSION>.ingress # 定义 Ingress 的规则，指定要监听的域名
       http:
         paths:
           - path: / # 路径
