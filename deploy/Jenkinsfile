@@ -6,6 +6,19 @@ pipeline {
         DOCKER_USERNAME = credentials('docker-username')  // Jenkins凭据ID
         DOCKER_PASSWORD = credentials('docker-password')  // Jenkins凭据ID
     }
+    parameters {
+        gitParameter(
+            branchFilterType: 'All',  // 可选：All、Remote、Local 等
+            defaultValue: 'master',
+            name: 'branch',
+            quickFilterEnabled: true,  // 启用快速筛选
+            selectedValue: 'DEFAULT',
+            sortMode: 'DESCENDING_SMART',  // 按字母降序排列
+            tagFilterRegex: '*',
+            type: 'PT_BRANCH',  // 参数类型：分支
+            useRepository: 'https://github.com/your-repo.git'  // 仓库地址
+        )
+    }
     stages {
         stage('Init') {
             steps {
@@ -13,6 +26,15 @@ pipeline {
                     def dockerPath = tool 'docker' //全局配置里的docker
                     env.PATH = "${dockerPath}/bin:${env.PATH}" //添加了系统环境变量上
                 }
+            }
+        }
+        stage('Git') {
+            steps {
+                checkout scm: [
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${params.BRANCH}"]],
+                    userRemoteConfigs: [[url: 'https://github.com/your-repo.git']]
+                ]
             }
         }
         stage('Build') {

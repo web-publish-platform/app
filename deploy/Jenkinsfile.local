@@ -2,7 +2,20 @@
 pipeline {
     agent any
     environment {
-        DOCKER_REGISTRY = 'localhost:5001'  // 本地仓库地址
+        DOCKER_REGISTRY = 'localhost:5001'  // Docker本地仓库地址
+    }
+    parameters {
+        gitParameter(
+            branchFilter: 'origin/(.*)',  // 替代 branchFilterType
+            defaultValue: 'master',
+            name: 'branch',
+            quickFilterEnabled: true,
+            selectedValue: 'DEFAULT',
+            sortMode: 'DESCENDING_SMART',
+            tagFilter: '*',  // 替代 tagFilterRegex
+            type: 'PT_BRANCH',
+            useRepository: "${env.GIT_URL}"
+        )
     }
     stages {
         stage('Docker:Init') {
@@ -15,6 +28,15 @@ pipeline {
                         sh 'docker --version'
                     }
                 }
+            }
+        }
+        stage('Git:Checkout') {
+            steps {
+                checkout scm: [
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${params.branch}"]],
+                    userRemoteConfigs: [[url: "${env.GIT_URL}"]]
+                ]
             }
         }
         stage('Docker:Build') {
