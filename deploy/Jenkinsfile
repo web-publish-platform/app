@@ -2,54 +2,91 @@
 pipeline {
     agent any
     environment {
-        DOCKER_REGISTRY = 'localhost:5001'  // 本地仓库地址
-        DOCKER_USERNAME = credentials('docker-username')  // Jenkins凭据ID
-        DOCKER_PASSWORD = credentials('docker-password')  // Jenkins凭据ID
+        DOCKER_REGISTRY = 'localhost:5001'  // Docker本地仓库地址
     }
     parameters {
         gitParameter(
-            branchFilterType: 'All',  // 可选：All、Remote、Local 等
+            branchFilter: 'origin/(.*)',  // 替代 branchFilterType
             defaultValue: 'master',
             name: 'branch',
-            quickFilterEnabled: true,  // 启用快速筛选
+            quickFilterEnabled: true,
             selectedValue: 'DEFAULT',
-            sortMode: 'DESCENDING_SMART',  // 按字母降序排列
-            tagFilterRegex: '*',
-            type: 'PT_BRANCH',  // 参数类型：分支
-            useRepository: 'https://github.com/your-repo.git'  // 仓库地址
+            sortMode: 'DESCENDING_SMART',
+            tagFilter: '*',  // 替代 tagFilterRegex
+            type: 'PT_BRANCH',
+            useRepository: "${env.GIT_URL}"
         )
     }
     stages {
-        stage('Init') {
-            steps {
-                script{
-                    def dockerPath = tool 'docker' //全局配置里的docker
-                    env.PATH = "${dockerPath}/bin:${env.PATH}" //添加了系统环境变量上
-                }
-            }
-        }
-        stage('Git') {
+        stage('Git:Checkout') {
             steps {
                 checkout scm: [
                     $class: 'GitSCM',
-                    branches: [[name: "*/${params.BRANCH}"]],
-                    userRemoteConfigs: [[url: 'https://github.com/your-repo.git']]
+                    branches: [[name: "*/${params.branch}"]],
+                    userRemoteConfigs: [[url: "${env.GIT_URL}"]]
                 ]
             }
         }
-        stage('Build') {
+        stage('Docker:Init') {
             steps {
                 script{
-                    sh "docker build --rm -t ${params.name}:${params.version}  -f deploy/Dockerfile ."
+                    // 从全局工具配置获取 Docker 路径，并拼接到 PATH
+                    def dockerPath = tool 'docker'
+                    // 仅在 withEnv 块内生效，不影响全局
+                    withEnv(["PATH=${dockerPath}/bin:${env.PATH}"]) {
+                        sh 'docker --version'
+                    }
                 }
             }
         }
-        stage('Deploy:Docker') {
+        stage('Docker:Clean Old Image') {
+            steps {
+                script {
+                    // 检查镜像是否存在，存在则删除 避免本地有很多 “悬空”镜像
+                    def imageExists = sh(
+                        script: "docker images --format '{{.Repository}}:{{.Tag}}' | grep -q '${params.name}:${params.version}'",
+                        returnStatus: true
+                    )
+
+                    if (imageExists == 0) {
+                        echo "本地存在 ${params.name}:${params.version} 镜像，开始删除..."
+                        sh "docker rmi -f ${params.name}:${params.version}"
+                    } else {
+                        echo "本地不存在 ${params.name}:${params.version} 镜像，无需删除"
+                    }
+                }
+            }
+        }
+        stage('Docker:Build') {
             steps {
                 script{
-                    sh "docker login -u djlxs -p djl.l951753" 
-                    sh "docker tag ${params.name}:${params.version} djlxs/${params.name}:${params.version}" 
-                    sh "docker push djlxs/${params.name}:${params.version}"
+                    // 拼接 build-arg 参数，将 Jenkins 参数传递给 Docker
+                    def buildArgs = [
+                        "--build-arg COS_SECRET_ID=${params.cos_secret_id}",
+                        "--build-arg COS_SECRET_KEY=${params.cos_secret_key}",
+                        "--build-arg COS_BUCKET=${params.cos_bucket}",
+                        "--build-arg COS_REGION=${params.cos_region}",
+                        "--build-arg VERSION=${params.version}",
+                    ].join(' ')
+
+                    sh "docker build ${buildArgs} --rm -t ${params.name}:${params.version}  -f deploy/Dockerfile ."
+                    echo "docker build success"
+                }
+            }
+        }
+        stage('Docker:Tag') {
+            steps {
+                script{
+                    sh "docker tag ${params.name}:${params.version} $DOCKER_REGISTRY/${params.name}:${params.version}" 
+                }
+            }
+        }
+        // 本地Docker镜像仓库
+        stage('Docker:Push') {
+            steps {
+                script{
+                    sh "docker login -u djlxs -p 123456 $DOCKER_REGISTRY" 
+                    sh "docker push $DOCKER_REGISTRY/${params.name}:${params.version}"
                 }
             }
         }
@@ -64,8 +101,6 @@ pipeline {
 
                     sh "sed -i '' 's/<NAME>/${params.name}/' deploy/k8s/ingress.yaml"
                     sh "sed -i '' 's/<VERSION>/${params.version}/' deploy/k8s/ingress.yaml"
-
-                    sh "sed -i '' 's/<VERSION>/${params.name}/' deploy/k8s/router.ingress.yaml"
                 }
             }
         }
@@ -81,25 +116,6 @@ pipeline {
                     echo "-------ingress--------"
                     sh "cat deploy/k8s/ingress.yaml"
                     sh "kubectl apply -f deploy/k8s/ingress.yaml"
-                    echo "-------ingress--------"
-                    sh "kubectl apply -f deploy/k8s/ingress.yaml"
-                    echo "-------router ingress--------"
-                    sh "kubectl apply -f deploy/k8s/router.ingress.yaml"
-                }
-            }
-        }
-        stage('Generate:gray config') {
-            steps {
-                script{
-                    // 读取配置文件内容到 Groovy 变量
-                    def configContent = readFile('gray.config.txt').trim()
-
-                    echo "-------exec grayConfigGenerator.js--------"
-                    sh "node grayConfigGenerator.js"
-                    echo "------- add gray config info--------"
-                    sh "kubectl annotate ingress ${params.name}.routing.ingress \
-                          nginx.ingress.kubernetes.io/configuration-snippet='${configContent}' \
-                          --overwrite"
                 }
             }
         }

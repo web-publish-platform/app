@@ -19,6 +19,7 @@ spec:
       containers:
         - name: <NAME>-<VERSION> # 容器的名称
           image: host.minikube.internal:5001/<NAME>:<VERSION> # 容器使用的镜像
-          imagePullPolicy: IfNotPresent  # 仅当本地不存在镜像时才拉取
+          # imagePullPolicy: IfNotPresent  # 仅当本地不存在镜像时才拉取
+          imagePullPolicy: Always  # 强制拉取 最佳实践是每个镜像的tag应该都不同，这里为了避免产生很多版本的镜像，可能会使用同一个版本标签，所以这里设置为 Always 来强制拉取
           ports:
             - containerPort: 80 # 表示容器监听的端口是 80，这是 Nginx 的默认 HTTP 端口。
